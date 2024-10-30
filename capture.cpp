@@ -8,8 +8,6 @@ capture::capture(QObject *parent): QThread{parent}
     cameraMatrix.at<double>(1, 1) = 606.417541503906; // Fy
     cameraMatrix.at<double>(0, 2) = 327.089965820313; // PPX
     cameraMatrix.at<double>(1, 2) = 240.459075927734; //PPY
-
-    // Khởi tạo ma trận đồng nhất 4x4
     R_cam2base.copyTo(homogeneous_matrix(cv::Rect(0, 0, 3, 3)));
     t_cam2base.copyTo(homogeneous_matrix(cv::Rect(3, 0, 1, 3)));
     //-----------------------------------the code below is using for model ------------------
@@ -42,8 +40,8 @@ void capture::run()
         //-----------------------------------apply filter cho depth --------------
         if(isFilter == true){
            /*frame*/ depth = data.get_depth_frame();
-    ////////        // Áp dụng các bộ lọc
-    ////        depth = decimation_filter.process(depth);
+ // Áp dụng các bộ lọc
+//        depth = decimation_filter.process(depth);
            depth = depth_to_disparity.process(depth);
     //        depth = spatial_filter.process(depth);
            depth = temporal_filter.process(depth);
