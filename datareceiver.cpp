@@ -42,12 +42,6 @@ void DataReceiver::run()
                 QJsonArray jsonArray = doc.array();
                 // qDebug() << "jsonArray:" <<jsonArray;
                 processData(jsonArray);
-                // qDebug() << "classId in run():" << classId;
-               // int newClassId = getLatestClassId(jsonArray);
-               //  {
-               //      QMutexLocker locker(&classIdMutex);
-               //      *classId = newClassId;  // Update the value at the address of classId
-               //  }
             }
         }
         msleep(50);  // Chờ thêm 50 milliseconds giữa các lần lặp
@@ -77,11 +71,6 @@ void DataReceiver::processData(QJsonArray &data)
             trackerId = arr[1].toInt();           // The tracker ID is the second element
             classId = arr[2].toInt();             // The class ID is the third element
 
-            // dataSplit(bboxArray, trackerId, classId, detections);
-            // qDebug() << "Processed data: "
-            //          << "bbox: " << bboxArray << ", "
-            //          << "tracker_id: " << trackerId << ", "
-            //          << "class_id: " << classId;
         } else {
             qDebug() << "Unexpected data format: " << value;
         }
@@ -101,11 +90,8 @@ void DataReceiver::dataSplit(QJsonArray bboxArray, int trackerId, int classId, Q
     int top = bboxArray[1].toDouble();
     int right = bboxArray[2].toDouble();
     int bottom = bboxArray[3].toDouble();
-
-    // Calculate the center
     double centerX = (left + right) / 2.0;
     double centerY = (top + bottom) / 2.0;
-    // Khởi tạo QPair với giá trị centerX và centerY
     centerModel.first = centerX;
     centerModel.second = centerY;
 
@@ -126,6 +112,5 @@ int DataReceiver::getLatestClassId(QJsonArray &data)
         }
     }
 
-    // qDebug() << "Latest classId:" << latestClassId;
     return latestClassId;
 }
