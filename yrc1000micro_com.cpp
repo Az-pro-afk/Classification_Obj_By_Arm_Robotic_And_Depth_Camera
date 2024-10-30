@@ -46,7 +46,6 @@ void YRC1000micro_com::YRC1000microSetConnection(QHostAddress address, quint16 p
 void YRC1000micro_com::YRC1000microOnServo(){
     QByteArray data = yrc1000micro_command.setServoOn();
     udp_server.sendData(udp_address,udp_port,data);
-    //    qDebug() << data;
 }
 
 void YRC1000micro_com::YRC1000microOffServo(){
@@ -57,9 +56,6 @@ void YRC1000micro_com::YRC1000microOffServo(){
 void YRC1000micro_com::YRC1000microMoveCartesian(quint8 coordinate,quint8 move_type, quint8 speed_type, double speed, QVector<double>* position)
 {
     QByteArray data = yrc1000micro_command.setRobotPositionCartesian(coordinate, move_type, speed_type, speed, position);
-    // // Debug output: Hex value
-    //    QString hexData = data.toHex().toUpper();
-    //    qDebug() << "Hex data at set position:" << hexData;
     udp_server.sendData(udp_address,udp_port,data);
 }
 
@@ -72,18 +68,14 @@ void YRC1000micro_com::YRC1000microHomePos()
 void YRC1000micro_com::YRC1000ReadPosition(){
     QByteArray data = yrc1000micro_command.readRobotPosition();
     udp_server.sendData(udp_address, udp_port, data);
-    //    qDebug() << "data read pos cmd : "<< data ;
 }
 
 void YRC1000micro_com::YRC1000microDataCallback(){
     QByteArray data = udp_server.getUdpData();
-    //    qDebug() << "Received Data: " << data;
 
     // Extract the request ID from the received data
     quint8 res_id_index = (quint8)data[CMD_REQUEST_ID];
     quint8 index_response = (quint8)data[CMD_ACK];
-    //    qDebug() << "request_id: " << res_id_index;
-
     // Use switch-case to handle different response IDs
     switch ( res_id_index)
     {
