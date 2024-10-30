@@ -33,28 +33,21 @@ void caculateMatrix::createWorlCoordinateAruco(float arcLength, std::vector<Poin
 void caculateMatrix::printMat(const Mat &mat)
 {
     std::stringstream ss;
-    ss << mat; // Chuyển ma trận thành chuỗi
-    qDebug().noquote() << QString::fromStdString(ss.str()); // In chuỗi bằng qDebug
+    ss << mat;
+    qDebug().noquote() << QString::fromStdString(ss.str()); 
 }
 
 void caculateMatrix::createTarget2Cam(string imgDir, int index, Mat cameraMatrix, Mat distCoeffs, vector<Mat> &rvecs, vector<Mat> &tvecs)
 {
-
     vector<Point3f> objp;
     createWorlCoordinateAruco(AURO_LENGTH, objp);
-    //    cout<< " objp "<< objp <<endl;
-
     std::vector<int> ids;
     std::vector<std::vector<cv::Point2f>> markerCorners;
     cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_7X7_250);
-
     for(int i=1; i < index; i++)
     {
         std::string imgPath = imgDir + "image_(" + std::to_string(i) + ").jpg";
-
         Mat img = imread(imgPath);
-
-        //cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
         cv::aruco::detectMarkers(img, dictionary, markerCorners, ids);
         if(ids.size()<1){
             cout<< "=============================================";
@@ -62,15 +55,10 @@ void caculateMatrix::createTarget2Cam(string imgDir, int index, Mat cameraMatrix
             cout<< "=============================================";
 
         }
-        //  cout<< "ids: " << ids[0]<< endl;
-        //   cout << "maker: " << markerCorners[0] << endl;
         Mat rvec, tvec;
-
         solvePnP(objp, markerCorners.at(0), cameraMatrix, distCoeffs, rvec, tvec);
         Mat rotation_matrix;
-
         cv::Rodrigues(rvec, rotation_matrix);
-
         rvecs.push_back(rotation_matrix);
         tvecs.push_back(tvec);
 
@@ -93,77 +81,55 @@ void caculateMatrix::loadCamera(Mat &cameraMatrix, Mat &distCoeffs, bool isOnlin
 }
 
 Mat caculateMatrix::Rx(double phi)
-{    // Initialize the rotation matrix
+{   
     cv::Mat Rx = cv::Mat::eye(3, 3, CV_64F);
-
-    // Assign values to the rotation matrix
     double radians = phi * CV_PI / 180.0; // Convert degrees to radians
     Rx.at<double>(1, 1) = std::cos(radians);
     Rx.at<double>(1, 2) = -std::sin(radians);
     Rx.at<double>(2, 1) = std::sin(radians);
     Rx.at<double>(2, 2) = std::cos(radians);
     return Rx;
-
 }
 
 Mat caculateMatrix::Ry(double phi)
-{    // Initialize the rotation matrix
+{ 
     cv::Mat Ry = cv::Mat::eye(3, 3, CV_64F);
-
-    // Assign values to the rotation matrix
     double radians = phi * CV_PI / 180.0; // Convert degrees to radians
     Ry.at<double>(0, 0) = std::cos(radians);
     Ry.at<double>(0, 2) = std::sin(radians);
     Ry.at<double>(2, 0) = -std::sin(radians);
     Ry.at<double>(2, 2) = std::cos(radians);
-
     return Ry;
-
 }
 
 Mat caculateMatrix::Rz(double phi)
-{    // Initialize the rotation matrix
+{
     cv::Mat Rz = cv::Mat::eye(3, 3, CV_64F);
-
-    // Assign values to the rotation matrix
     double radians = phi * CV_PI / 180.0; // Convert degrees to radians
     Rz.at<double>(0, 0) = std::cos(radians);
     Rz.at<double>(0, 1) = -std::sin(radians);
     Rz.at<double>(1, 0) = std::sin(radians);
     Rz.at<double>(1, 1) = std::cos(radians);
-
     return Rz;
-
 }
 
 void caculateMatrix::loadRobotPos(string fileName, vector<double> &values)
 {
-    // Đọc từng dòng từ file và lưu các giá trị vào vector
     std::string line;
     std::ifstream file(fileName);
     while (std::getline(file, line)) {
         double value = std::stod(line); // Chuyển đổi dòng thành số dạng double
         values.push_back(value); // Thêm giá trị vào vector
     }
-
-    // Đóng file sau khi đã đọc xong
     file.close();
 }
 
 void caculateMatrix::createGripper2Base(string folderDir, int index, std::vector<Mat> &t_gripper2base, std::vector<Mat> &R_gripper2base)
 {
     for (int i = 1; i< index; i++){
-
         std::vector<cv::Mat> R_gripper2base_non_convert;
         std::string filePath = folderDir + "position_(" + std::to_string(i) + ").txt";
-
-        // Tạo một đối tượng ifstream để mở file cho đọc
-
-        // Tạo một vector để lưu các giá trị từ file
-
         std::vector<double> values;
-
-
         loadRobotPos(filePath, values);
         cv::Mat translation_vector_gripper2base = cv::Mat(3, 1, CV_64F);
         translation_vector_gripper2base.at<double>(0, 0) = values[2]; // Gán giá trị dịch chuyển x
@@ -177,7 +143,6 @@ void caculateMatrix::createGripper2Base(string folderDir, int index, std::vector
         rotation_vector_gripper2base.at<double>(2, 0) = values[7]; // Gán giá trị dịch chuyển Yaw
 
         R_gripper2base_non_convert.push_back(rotation_vector_gripper2base);
-
         cv::Mat R_result = Rz(rotation_vector_gripper2base.at<double>(2, 0))*Ry(rotation_vector_gripper2base.at<double>(1, 0))*Rx(rotation_vector_gripper2base.at<double>(0, 0));
         R_gripper2base.push_back(R_result);
     }
@@ -243,24 +208,16 @@ void caculateMatrix::getMatrixFromCam2Base(int numSample)
 {
     Mat cameraMatrix, distCoeffs;
     loadCamera(cameraMatrix, distCoeffs);
-    //    string imgDir = "D:/Tai_lieu_do_an/Picture_Aruco_Hand_For_Calib/PC_Robot_Control/Image_Data_May_3/";
     string imgDir = "D:/Tai_lieu_do_an/Picture_Aruco_Hand_For_Calib/Calib_Night/Calib_7x7/Image/";
     vector<Mat> tvecs, rvecs;
     createTarget2Cam(imgDir, numSample, cameraMatrix, distCoeffs,rvecs, tvecs);
-    //    displayVector<Mat>(tvecs);
-    //---------------------
     std::vector<cv::Mat> t_gripper2base, R_gripper2base;
-    //    string folderDir = "D:/Tai_lieu_do_an/Picture_Aruco_Hand_For_Calib/PC_Robot_Control/Image_Data/Position/";
     string folderDir = "D:/Tai_lieu_do_an/Picture_Aruco_Hand_For_Calib/Calib_Night/Calib_7x7/Position/";
-
     createGripper2Base(folderDir, numSample, t_gripper2base, R_gripper2base);
-
-    //displayVector<Mat>(R_gripper2base);
     cout<< "-------------------\n";
     std::vector<cv::Mat> t_base2gripper, R_base2gripper;
     createBase2Gripper(t_gripper2base, R_gripper2base, t_base2gripper, R_base2gripper);
     //displayVector<Mat>(R_base2gripper);
-
     cout << "rvec: " << rvecs.size() <<endl;
     cout << "tvecs: " << tvecs.size() <<endl;
     cout << "t_base2gripper: " << t_base2gripper.size()<<endl;
@@ -271,10 +228,8 @@ void caculateMatrix::getMatrixFromCam2Base(int numSample)
     cout << "t_base2gripper: " << t_base2gripper[0]<<endl;
     cout << "R_base2gripper: " << R_base2gripper[0]<<endl;
     cv::Mat t_cam2base, R_cam2base;
-
     cv::calibrateHandEye(R_base2gripper, t_base2gripper, rvecs, tvecs,
                          R_cam2base, t_cam2base, CALIB_HAND_EYE_PARK);
-
     cout <<"------------ Result -----------------"<<endl;
     cout << "R_cam2base: " << R_cam2base<<endl;
     cout << "t_cam2base: " << t_cam2base <<endl;
