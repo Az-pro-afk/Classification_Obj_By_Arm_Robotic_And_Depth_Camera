@@ -60,7 +60,6 @@ struct YRC1000micro_command::TxDataWriteVarPosition
 };
 
 QByteArray YRC1000micro_command::setServoOn(){
-    //    qDebug() << *this->header_to_send->toHex();
     QByteArray cmd      = *header_to_send + data_to_send;
     cmd[CMD_REQUEST_ID] = CMD_REQUEST_ID_ON_SERVO;
     cmd[CMD_ID_ADDRESS] = CMD_ID_SERVO_ON;
@@ -72,7 +71,6 @@ QByteArray YRC1000micro_command::setServoOn(){
 }
 
 QByteArray YRC1000micro_command::setServoOff(){
-    //qDebug() <<this-> header_to_send;
     QByteArray cmd = *header_to_send + data_to_send;
     cmd[CMD_REQUEST_ID] = CMD_REQUEST_ID_OFF_SERVO;
     cmd[CMD_ID_ADDRESS] = CMD_ID_SERVO_ON;
@@ -219,23 +217,12 @@ QByteArray YRC1000micro_command::selectJob(char* jobName)
     cmd[CMD_ATTRIBUTE]  = 0x00;
     cmd[CMD_SERVICE]    = 0x02;
 
-
-    //    qDebug() << "cmd size of jobSelect: " << cmd.size();
-    // Tính kích thước của mảng jobName
     int jobNameSize = strlen(jobName);
-    //    qDebug() << "string length: "<< jobNameSize;
-    // Thêm dữ liệu từ mảng jobName vào cuối cmd
     cmd.append(jobName, jobNameSize);
 
     while (cmd.size() < 68) {
         cmd.append('\x00');
     }
-
-
-    //    qDebug() << "command jobselect: " << cmd;
-    //    qDebug() << "cmd size: " << cmd.size();
-    //    printCMD(cmd);
-
     return cmd;
 }
 
@@ -254,10 +241,6 @@ QByteArray YRC1000micro_command::startJob()
     cmd.append('\x00');
     cmd.append('\x00');
     cmd.append('\x00');
-
-    //    qDebug() << "cmd of startJob: "<< cmd.size();
-    //    qDebug() << "command startJob: " << cmd.toHex();
-
     return cmd;
 
 }
@@ -272,10 +255,6 @@ QByteArray YRC1000micro_command::getVarPosition(uint16_t index)
     cmd[CMD_ATTRIBUTE]  = 16;
     cmd[CMD_SERVICE]    = 0x01;
     cmd[CMD_DATA_SIZE]  = 0;
-
-    //    qDebug() << "cmd of getVarPosition: "<< cmd.size();
-    //    printCMD(cmd);
-
     return cmd;
 }
 
@@ -288,9 +267,6 @@ QByteArray YRC1000micro_command::writeVarPosition(uint16_t index, QVector<int32_
     cmd[CMD_SERVICE]    = 0x02;
     cmd[CMD_ATTRIBUTE]  = 0x00;       // DE MAC DINH BANG 0
 
-    //    qDebug() << "cmd writeVarPosition size before add data part: "<< cmd.size();
-    //    qDebug() << "value move at yrc1000micro_command: " << *pos;
-
     TxDataWriteVarPosition position;
     cmd[CMD_DATA_SIZE] = sizeof (position);
     position.data_type              = 0x11;      //catersian coordinates
@@ -302,42 +278,26 @@ QByteArray YRC1000micro_command::writeVarPosition(uint16_t index, QVector<int32_
     position.fifth_axis_position    = (int32_t)pos.at(4);
     position.sixth_axis_position    = (int32_t)pos.at(5);
 
-    //    qDebug() << "--------------------------------------------------";
-    //    qDebug() << "value move at yrc1000micro_command: ";
-    //    printTxDataWriteVarPosition(position);
-    //    qDebug() << "-----------------------------"<< sizeof(position);
-    //    qDebug() << "positon size: "<< sizeof(position);
-
     // Appending bytes of the position struct
     cmd.append(reinterpret_cast<const char*>(&position), sizeof(position));
-    //    qDebug() << "cmd writeVarPosition size shoule be 84 byte: "<< cmd.size();
-    //    printCMD(cmd);
-    //    qDebug() << "data of write var position: " << cmd.toHex();
     return cmd;
 }
 //---------------------------------- Read and Write Var Position----------------------
 QByteArray YRC1000micro_command::writeVarPositionAgain(uint16_t index, QVector<double>* position)
 {
-    qDebug() << "positio at rewrite: " << position;
     QByteArray cmd = *header_to_send + position_variable_data;
     cmd[CMD_REQUEST_ID] = CMD_REQUEST_ID_WRITE_VARPOS;
     cmd[CMD_ID_ADDRESS] = CMD_ID_GET_VAR_POSITION;
     cmd[CMD_INSTANCE]   = index;
-    qDebug() << "index " << index;
     cmd[CMD_SERVICE]    = 0x10;
     cmd[CMD_ATTRIBUTE]  = 0x00;       // catersian coordinates
     cmd[CMD_DATA_SIZE] = 52; /*sizeof(position_variable_data);*/
-    //    qDebug() << "size of positio at rewrite: " << position_variable_data.size();
-
     quint32 x_u         = (quint32)(position->at(0));
     quint32 y_u         = (quint32)(position->at(1));
     quint32 z_u         = (quint32)(position->at(2));
     quint32 roll_u      = (quint32)(position->at(3));
     quint32 pitch_u     = (quint32)(position->at(4));
     quint32 yaw_u       = (quint32)(position->at(5));
-
-    //    qDebug() << "data to send: " << x_u;
-
     cmd [32]            = 0x11; // data type;
 
     cmd [/*52*/DATA_MOVE_X_CARTESIAN + HEADER_SIZE+ 3] =(quint8)(x_u>>24);             //first coordinate data
@@ -369,9 +329,6 @@ QByteArray YRC1000micro_command::writeVarPositionAgain(uint16_t index, QVector<d
     cmd[DATA_MOVE_YAW_CARTESIAN+HEADER_SIZE+2]      = (quint8)(yaw_u>>16);
     cmd[DATA_MOVE_YAW_CARTESIAN+HEADER_SIZE+1]      = (quint8)(yaw_u>>8);
     cmd[DATA_MOVE_YAW_CARTESIAN+HEADER_SIZE]        = (quint8)(yaw_u);
-
-    qDebug() << "size of writeVarPositionAgain: " << cmd.size();
-    qDebug() << "data of rewrite var position: " << cmd.toHex();
     return cmd;
 }
 //--------------------------------- Read and Write Byte-------------------------------
@@ -384,13 +341,6 @@ QByteArray YRC1000micro_command::getByte(uint16_t index)
     cmd[CMD_SERVICE]    = 0x0E;
     cmd[CMD_REQUEST_ID] = CMD_REQUEST_ID_GET_BYTE;
     cmd[CMD_DATA_SIZE]  = 0;
-
-    qDebug() << "GetByte:" <<index ;
-    //    qDebug() << "cmd size getByte: "<< cmd.size();
-    //    qDebug() << "cmd getByte: "<< cmd;
-    //    qDebug() << "cmd of getByte: ";
-    //    printCMD(cmd);
-
     return cmd;
 }
 
@@ -402,18 +352,8 @@ QByteArray YRC1000micro_command::writeByte(uint16_t index, uint8_t data)
     cmd[CMD_ATTRIBUTE]  = 0x01;
     cmd[CMD_SERVICE]    = 0x10;
     cmd[CMD_REQUEST_ID] = CMD_REQUEST_ID_WRITE_BYTE;
-
-    //    qDebug() << "cmd size writeByte: "<< cmd.size();
-    //    qDebug() << "cmd writeByte: "<< cmd;
-
     cmd[CMD_DATA_SIZE]  = sizeof(data);
     cmd.append(reinterpret_cast<const char*>(&data), sizeof(data));
-
-    //    qDebug() << "cmd size writeByte: "<< cmd.size();
-    //    qDebug() << "cmd writeByte: "<< cmd;
-    //    qDebug() << "cmd of writeByte:" ;
-    //    printCMD(cmd);
-
     return cmd;
 }
 //--------------------------------- Read and Write Byte-------------------------------
@@ -421,15 +361,12 @@ void YRC1000micro_command::printCMD(QByteArray cmd)
 {
     // Convert cmd to a string of hexadecimal digits
     QString cmdHex = cmd.toHex();
-
     // Insert a backslash character between each pair of digits
     QString cmdBackslashSeparated;
     for (int i = 0; i < cmdHex.length(); i += 2) {
         cmdBackslashSeparated += cmdHex.mid(i, 2) + "\\";
     }
     cmdBackslashSeparated.chop(1); // remove the last backslash character
-
-    qDebug() << "print cmd: " << cmdBackslashSeparated;
 }
 
 void YRC1000micro_command::printTxDataWriteVarPosition(const YRC1000micro_command::TxDataWriteVarPosition &pos) {
